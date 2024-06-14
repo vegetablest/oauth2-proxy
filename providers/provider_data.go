@@ -21,7 +21,8 @@ import (
 
 const (
 	// This is not exported as it's not currently user configurable
-	oidcUserClaim = "sub"
+	oidcUserClaim          = "sub"
+	preferredUsernameClaim = "preferred_username"
 )
 
 // ProviderData contains information required to configure all implementations
@@ -47,6 +48,7 @@ type ProviderData struct {
 	UserClaim                string
 	EmailClaim               string
 	GroupsClaim              string
+	PreferredUsernameClaim   string
 	Verifier                 internaloidc.IDTokenVerifier
 	SkipClaimsFromProfileURL bool
 
@@ -204,6 +206,10 @@ func (p *ProviderData) setProviderDefaults(defaults providerDefaults) {
 	if p.UserClaim == "" {
 		p.UserClaim = oidcUserClaim
 	}
+
+	if p.PreferredUsernameClaim == "" {
+		p.PreferredUsernameClaim = preferredUsernameClaim
+	}
 }
 
 // defaultURL will set return a default value if the given value is not set.
@@ -259,7 +265,7 @@ func (p *ProviderData) buildSessionFromClaims(rawIDToken, accessToken string) (*
 		{p.EmailClaim, &ss.Email},
 		{p.GroupsClaim, &ss.Groups},
 		// TODO (@NickMeves) Deprecate for dynamic claim to session mapping
-		{"preferred_username", &ss.PreferredUsername},
+		{p.PreferredUsernameClaim, &ss.PreferredUsername},
 	} {
 		if _, err := extractor.GetClaimInto(c.claim, c.dst); err != nil {
 			return nil, err
